@@ -14,7 +14,7 @@ NEWSPIDER_MODULE = "zoetermeerwijzer.spiders"
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = "zoetermeerwijzer (+http://www.yourdomain.com)"scra
+USER_AGENT = "SamenZoetermeerGezond (+https://samenzoetermeergezond.nl/)"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = True
@@ -62,9 +62,10 @@ ROBOTSTXT_OBEY = True
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    "zoetermeerwijzer.pipelines.ZoetermeerwijzerPipeline": 300,
-#}
+ITEM_PIPELINES = {
+   "zoetermeerwijzer.pipelines.CleanDataPipeline": 300,
+   'zoetermeerwijzer.pipelines.MySQLPipeline': 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
