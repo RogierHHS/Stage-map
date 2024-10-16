@@ -11,7 +11,7 @@ class GgdAppSpider(scrapy.Spider):
     # Pagina-instelling voor JSON-export en het instellen van de MySQL pipeline
     custom_settings = {
         'FEEDS': {
-            'App_Data_GGD.json': {
+            'JSON_bestanden/GGD_Appstore.json': {  # Geef hier de map aan
                 'format': 'json',
                 'overwrite': True,
             }
@@ -19,9 +19,8 @@ class GgdAppSpider(scrapy.Spider):
         'ITEM_PIPELINES': {
             'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
             'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,
-        },
-        
-    }
+        }
+}
 
     def parse(self, response):
         app_category = response.css('div#header-categorien a::attr(href)').getall()

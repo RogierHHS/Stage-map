@@ -1,5 +1,6 @@
 import scrapy
 from SamenZoeterMeerGezond.items import ActiviteitenIZ
+import os 
 
 class IzIndewijkspiderSpider(scrapy.Spider):
     name = "IZ-InDeWijkSpider"
@@ -9,7 +10,7 @@ class IzIndewijkspiderSpider(scrapy.Spider):
     # Exporteren naar JSON en instellen van throttling parameters
     custom_settings = {
         'FEEDS': {
-            'activiteiten_iz.json': {
+            'JSON_bestanden/activiteiten_IZ.json': {  # Geef hier de map aan
                 'format': 'json',
                 'overwrite': True,
             }
@@ -18,7 +19,9 @@ class IzIndewijkspiderSpider(scrapy.Spider):
             'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
             'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,
         }
-    }
+}
+
+
     
     def parse(self, response):
         activiteiten = response.css('li.UniversalListItem_item__lLGLO')

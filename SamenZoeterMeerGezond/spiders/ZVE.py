@@ -9,20 +9,16 @@ class ZveSpider(scrapy.Spider):
     # Pagina-instelling voor JSON-export en het instellen van de MySQL pipeline
     custom_settings = {
         'FEEDS': {
-            'WorkshopsZVE.json': {
+            'JSON_bestanden/ZVE_workshops.json': {  # Geef hier de map aan
                 'format': 'json',
                 'overwrite': True,
             }
         },
-        # 'DOWNLOAD_DELAY': 2,  # Voorkom overbelasting van de server
-        # 'AUTOTHROTTLE_ENABLED': True,
-        # 'AUTOTHROTTLE_START_DELAY': 1,
-        # 'AUTOTHROTTLE_MAX_DELAY': 10,
         'ITEM_PIPELINES': {
-            # 'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,  # Pipeline voor data schoonmaak
-            'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,  # Pipeline voor MySQL-opslag
+            'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
+            'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,
         }
-    }
+}
 
     def parse(self, response):
         workshops = response.css('article.c-card.c-card--seminar.js-card')

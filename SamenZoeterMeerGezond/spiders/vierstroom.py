@@ -15,16 +15,16 @@ class vierstroom(scrapy.Spider):
 
     custom_settings = {
         'FEEDS': {
-            'vierstroom.json': {
+            'JSON_bestanden/Vierstroom_nieuws.json': {  # Geef hier de map aan
                 'format': 'json',
                 'overwrite': True,
             }
         },
         'ITEM_PIPELINES': {
-            # 'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
+            'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
             'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,
         }
-    }
+}
 
     def __init__(self):
         # Initialiseer de WebDriver met Selenium Manager

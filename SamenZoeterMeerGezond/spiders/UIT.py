@@ -8,7 +8,7 @@ class UITAgendaSpider(scrapy.Spider):
 
     custom_settings = {
         'FEEDS': {
-            'activiteiten_uit.json': {
+            'JSON_bestanden/activiteiten_UIT.json': {  # Geef hier de map aan
                 'format': 'json',
                 'overwrite': True,
             }
@@ -17,7 +17,7 @@ class UITAgendaSpider(scrapy.Spider):
             'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
             'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,
         }
-    }
+}
 
     def parse(self, response):
         activities = response.css('ul.tiles.tiles--doorway.tiles--small.list__overview li')

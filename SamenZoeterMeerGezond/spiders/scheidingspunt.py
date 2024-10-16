@@ -10,7 +10,7 @@ class ScheidingspuntSpider(scrapy.Spider):
     # Pagina-instelling voor JSON-export en het instellen van de MySQL pipeline
     custom_settings = {
         'FEEDS': {
-            'scheidingspunt_aanbod.json': {
+            'JSON_bestanden/Scheidingspunt.json': {  # Geef hier de map aan
                 'format': 'json',
                 'overwrite': True,
             }
@@ -18,9 +18,8 @@ class ScheidingspuntSpider(scrapy.Spider):
         'ITEM_PIPELINES': {
             'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
             'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,
-        },
-        
-    }
+        }
+}
 
     def parse(self, response):
         # Selecteer alle activiteit-items in de lijst
