@@ -1,0 +1,4 @@
+Scrapy==2.8.0
+mysql-connector-python==8.0.28
+selenium==4.10.0  # Zorg ervoor dat je de juiste versie gebruikt
+# Voeg hier andere dependencies toe
