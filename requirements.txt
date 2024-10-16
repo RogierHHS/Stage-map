@@ -1,0 +1,4 @@
+Scrapy==2.8.0
+mysql-connector-python==8.0.28
+selenium==4.10.0
+urllib3<1.26,>=1.20
