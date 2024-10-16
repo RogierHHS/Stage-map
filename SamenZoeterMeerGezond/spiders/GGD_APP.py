@@ -17,8 +17,8 @@ class GgdAppSpider(scrapy.Spider):
             }
         },
         'ITEM_PIPELINES': {
-            'zoetermeerwijzer.pipelines.CleanDataPipeline': 300,
-            'zoetermeerwijzer.pipelines.MySQLPipeline': 400,
+            'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
+            'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,
         },
         
     }

@@ -20,8 +20,8 @@ class ZTESpider(scrapy.Spider):
         'AUTOTHROTTLE_START_DELAY': 1,
         'AUTOTHROTTLE_MAX_DELAY': 10,
         'ITEM_PIPELINES': {
-            'zoetermeerwijzer.pipelines.CleanDataPipeline': 300,  # Pipeline voor data schoonmaak
-            'zoetermeerwijzer.pipelines.MySQLPipeline': 400,  # Pipeline voor MySQL-opslag
+            'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,  # Pipeline voor data schoonmaak
+            'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,  # Pipeline voor MySQL-opslag
         }
     }
 
