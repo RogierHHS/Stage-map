@@ -17,7 +17,7 @@ class ZMASpider(scrapy.Spider):
     # Pagina-instelling voor JSON-export en het instellen van de MySQL pipeline
     custom_settings = {
         'FEEDS': {
-            'JSON_bestanden/activiteiten_zma.json': {  # Geef hier de map aan
+            'JSON_bestanden/activiteiten_zma.json': { 
                 'format': 'json',
                 'overwrite': True,
             }
@@ -64,7 +64,8 @@ class ZMASpider(scrapy.Spider):
                 WebDriverWait(self.driver, 10).until(
                     lambda d: len(d.find_elements(By.CSS_SELECTOR, 'ul#rs_events_container li.rs_event_detail')) > len(response.css('ul#rs_events_container li.rs_event_detail'))
                 )
-                time.sleep(2)  # Wacht extra om zeker te zijn dat alles geladen is
+                time.sleep(2)  
+
             except Exception as e:
                 # Als de knop niet gevonden wordt, of er is een probleem, log en breek de lus
                 self.logger.info(f"Geen 'Laad meer'-knop meer beschikbaar of alle content is geladen. Fout: {e}")
@@ -78,29 +79,34 @@ class ZMASpider(scrapy.Spider):
         activiteiten = response.css('ul#rs_events_container li.rs_event_detail')
 
         for activiteit in activiteiten:
+            #Ophalen van de basisinformatie van de activiteit
             activiteit_zma = ActiviteitenZMA()
             activiteit_zma['Titel'] = activiteit.css('div.rs_event_details a.rs_event_link::text').get()
             activiteit_zma['Link'] = response.urljoin(activiteit.css('div.rs_event_details a.rs_event_link::attr(href)').get())
             activiteit_zma['Beschrijving'] = activiteit.css('div.eventDescription::text').get()
             activiteit_zma['Startdatum'] = activiteit.css('span.rsepro-event-starting-block b::text').get()
 
+            #Scrapen van de categorieën
             categorieen = activiteit.css('span.rsepro-event-categories-block a::text').getall()
             categorieen = categorieen + [None] * (4 - len(categorieen))
             categorieen = categorieen[:4]
             activiteit_zma['Categorie_1'], activiteit_zma['Categorie_2'], activiteit_zma['Categorie_3'], activiteit_zma['Categorie_4'] = categorieen
 
+            #Scrapen van de URL van de headerafbeelding
             activiteit_zma['Url_header_afbeelding'] = response.urljoin(activiteit.css('div.rs_event_image img::attr(src)').get())
 
+            #Volg de link naar de detailpagina voor aanvullende informatie per activiteit
             yield response.follow(activiteit_zma['Link'], callback=self.parse_details, meta={'activiteit_zma': activiteit_zma})
 
     def parse_details(self, response):
         activiteit_zma = response.meta['activiteit_zma']
 
+        #Ophalen van de extra beschrijving van de activiteit
         extra_beschrijving = response.css('span.description p, span.description strong::text').getall()
         volledige_beschrijving = ' '.join(extra_beschrijving).strip()
-
         activiteit_zma['Extra_beschrijving'] = volledige_beschrijving
 
+        #Zoeken voor een Afbeelding en scrapen als deze bestaat
         img_src = response.css('span.description img::attr(src)').get()
         if img_src:
             activiteit_zma['Url_afbeelding'] = response.urljoin(img_src)
