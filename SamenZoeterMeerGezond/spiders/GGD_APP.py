@@ -11,8 +11,7 @@ class GgdAppSpider(scrapy.Spider):
     # Pagina-instelling voor JSON-export en het instellen van de MySQL pipeline
     custom_settings = {
         'FEEDS': {
-            'JSON_bestanden/GGD_Appstore.json': {  # Geef hier de map aan
-                'format': 'json',
+            'JSON_bestanden/GGD_Appstore.json': {  
                 'overwrite': True,
             }
         },

@@ -10,7 +10,7 @@ class IzIndewijkspiderSpider(scrapy.Spider):
     # Exporteren naar JSON en instellen van throttling parameters
     custom_settings = {
         'FEEDS': {
-            'JSON_bestanden/activiteiten_IZ.json': {  # Geef hier de map aan
+            'JSON_bestanden/activiteiten_IZ.json': {  
                 'format': 'json',
                 'overwrite': True,
             }
@@ -21,8 +21,6 @@ class IzIndewijkspiderSpider(scrapy.Spider):
         }
 }
 
-
-    
     def parse(self, response):
         activiteiten = response.css('li.UniversalListItem_item__lLGLO')
 
@@ -53,7 +51,6 @@ class IzIndewijkspiderSpider(scrapy.Spider):
             yield response.follow(next_page_url, callback=self.parse)
 
     def parse_details(self, response):
-        # Haal het activiteit_iz item op dat is doorgegeven via meta
         activiteit_iz = response.meta['activiteit_iz']
 
         # Combineer alle tekst uit de relevante divs met p-, h4-, en strong-tags
@@ -62,17 +59,12 @@ class IzIndewijkspiderSpider(scrapy.Spider):
         # Voeg extra tekst uit eventuele andere content containers (zoals de vorige div-selectors)
         extra_beschrijving += response.css('div.text-container p, div.text-container h4, div.text-container strong::text').getall()
 
-        # Nog bredere fallback met een XPath-selector die op zoek gaat naar alle tekst in de <div> met class 'content'
         if not extra_beschrijving:
             extra_beschrijving = response.xpath('//div[contains(@class, "content")]//p//text()').getall()
 
-        # Combineer de teksten, zelfs als ze langer zijn, en verwijder extra witruimtes
         volledige_beschrijving = ' '.join(extra_beschrijving).strip()
-
-        # Voeg de extra beschrijving toe aan het activiteit_iz item
         activiteit_iz['Extra_beschrijving'] = volledige_beschrijving
 
-        # Yield het volledige activiteit_iz item
         yield activiteit_iz
 
 

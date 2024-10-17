@@ -10,7 +10,7 @@ class ScheidingspuntSpider(scrapy.Spider):
     # Pagina-instelling voor JSON-export en het instellen van de MySQL pipeline
     custom_settings = {
         'FEEDS': {
-            'JSON_bestanden/Scheidingspunt.json': {  # Geef hier de map aan
+            'JSON_bestanden/Scheidingspunt.json': { 
                 'format': 'json',
                 'overwrite': True,
             }
@@ -43,7 +43,4 @@ class ScheidingspuntSpider(scrapy.Spider):
             # Yield het item om op te slaan in de output (bijv. JSON of een database)
             yield activiteit_item
 
-        # Ga naar de volgende pagina als er een "volgende pagina"-link is
-        # next_page = response.css('a.next::attr(href)').get()
-        # if next_page:
-        #     yield response.follow(next_page, self.parse)
+       

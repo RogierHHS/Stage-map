@@ -9,7 +9,7 @@ class ThuisartsSpider(scrapy.Spider):
     # Pagina-instelling voor JSON-export en het instellen van de MySQL pipeline
     custom_settings = {
         'FEEDS': {
-            'JSON_bestanden/Thuisarts.json': {  # Geef hier de map aan
+            'JSON_bestanden/Thuisarts.json': {  
                 'format': 'json',
                 'overwrite': True,
             }
@@ -23,6 +23,7 @@ class ThuisartsSpider(scrapy.Spider):
     def parse(self, response):
         subject_lists = response.css('ul.subject-list')
 
+        #Ophalen van het onderwerp en de link naar de detailpagina
         for subject_list in subject_lists:
             onderwerpen = subject_list.css('li a')
             for onderwerp in onderwerpen:
@@ -38,15 +39,16 @@ class ThuisartsSpider(scrapy.Spider):
                 )
 
     def parse_detail(self, response):
-        onderwerp = response.meta['Onderwerp']
-        link_onderwerp = response.meta['Link_onderwerp']
+        thuisarts = Thuisarts()
+        thuisarts["Onderwerp"]= response.meta['Onderwerp']
+        thuisarts["Link_onderwerp"] = response.meta['Link_onderwerp']
 
         # Haal de samenvatting op
         samenvatting_items = response.css('div.subject-summary ul li::text').getall()
         if samenvatting_items:
-            samenvatting = ' '.join(samenvatting_items)
+            thuisarts["Samenvatting"] = ' '.join(samenvatting_items)
         else:
-            samenvatting = 'Geen samenvatting beschikbaar'
+            thuisarts["Samenvatting"] = 'Geen samenvatting beschikbaar'
 
         # Haal de situaties op
         situation_links = response.css('div.field--name-field-pg-situation div.field__item a')
@@ -60,12 +62,6 @@ class ThuisartsSpider(scrapy.Spider):
                 'Titel': titel,
                 'Link': volledige_link
             })
-
-        # Maak het item aan
-        thuisarts = Thuisarts()
-        thuisarts['Onderwerp'] = onderwerp
-        thuisarts['Link_onderwerp'] = link_onderwerp
-        thuisarts['Samenvatting'] = samenvatting
-        thuisarts['Situaties'] = situaties
+        thuisarts['Situaties'] = situaties  
 
         yield thuisarts
