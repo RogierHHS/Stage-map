@@ -99,3 +99,4 @@ class GgdAppSpider(scrapy.Spider):
             self.logger.error(f'Error extracting description: {e}')
             Apps_GGD["Beschrijving_lang"] = None
         yield Apps_GGD
+#
