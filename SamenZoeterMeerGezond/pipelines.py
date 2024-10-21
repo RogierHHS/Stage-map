@@ -5,6 +5,8 @@ import mysql.connector
 import re
 import logging
 import html
+import os
+from dotenv import load_dotenv
 
 class CleanDataPipeline:
     def process_item(self, item, spider):
@@ -84,11 +86,18 @@ class MySQLPipeline:
         self.logger = logging.getLogger(__name__) 
 
     def open_spider(self, spider):
+        load_dotenv()
+
+        db_host = os.getenv('DB_HOST')
+        db_user = os.getenv('DB_USER')
+        db_password = os.getenv('DB_PASSWORD')
+        db_name = os.getenv('DB_NAME')
+
         self.conn = mysql.connector.connect(
-            host='localhost',
-            user='root',
-            password='Rogier2004!',
-            database='scraping_project'
+            host= db_host,
+            user= db_user,
+            password= db_password,
+            database= db_name
         )
         self.cursor = self.conn.cursor()
 

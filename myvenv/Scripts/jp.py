@@ -1,4 +1,4 @@
-#!C:\Users\rogie\OneDrive\Documenten\GitHub\Stage-map\Stage-map\myvenv\Scripts\python.exe
+#!C:\Users\rogie\OneDrive\Documenten\GitHub\Stage-map\Stage-map\Stage-map\myvenv\Scripts\python.exe
 
 import sys
 import json
