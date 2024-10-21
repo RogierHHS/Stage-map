@@ -1,2 +1,8 @@
-
+#Conflicten met veranderen van laptop en desktop
+myvenv/
+#Conflicten met veranderen van laptop en desktop
 Stage-map/
+#SQL-Dumps voor als ik wil werken via mijn computer
+*.sql
+#Omgevingsbestanden voor SQL koppelen
+.env
