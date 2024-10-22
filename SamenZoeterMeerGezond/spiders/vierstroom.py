@@ -65,17 +65,17 @@ class vierstroom(scrapy.Spider):
 
         for item in grid_items:
             nieuws_item = Vierstroom()
-            nieuws_item['titel'] = item.css('h2.color-pink.mb-0::text').get(default='').strip()
-            nieuws_item['image_url'] = item.css('img.image__fluid.tile__image-fullwidth::attr(src)').get(default='')
-            nieuws_item['link'] = item.css('a.btn-solid--primary::attr(href)').get(default='')
+            nieuws_item['Titel'] = item.css('h2.color-pink.mb-0::text').get(default='').strip()
+            nieuws_item['Image_url'] = item.css('img.image__fluid.tile__image-fullwidth::attr(src)').get(default='')
+            nieuws_item['Link'] = item.css('a.btn-solid--primary::attr(href)').get(default='')
             description = item.css('div.card-bullet-list.card-bullet-list--pink::text').getall()
-            nieuws_item['beschrijving_kort'] = ' '.join([desc.strip() for desc in description]).strip()
-            nieuws_item['categorie'] = item.css('div.tile__icon div.leaf::text').get(default='').strip()
+            nieuws_item['Beschrijving_kort'] = ' '.join([desc.strip() for desc in description]).strip()
+            nieuws_item['Categorie'] = item.css('div.tile__icon div.leaf::text').get(default='').strip()
 
             # Bezoek de detailpagina en verzamel de tekst
-            if nieuws_item["link"]:
+            if nieuws_item["Link"]:
                 yield response.follow(
-                    url=nieuws_item["link"],
+                    url=nieuws_item["Link"],
                     callback=self.parse_detail,
                     meta={'item': nieuws_item} )
             else:

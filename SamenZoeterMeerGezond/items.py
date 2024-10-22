@@ -111,7 +111,12 @@ class Scheidingspunt(scrapy.Item):
     wat = scrapy.Field()
     voor_wie = scrapy.Field()
     wanneer = scrapy.Field()
-  
+
+class Evie(scrapy.Item):
+    titel = scrapy.Field()
+    link = scrapy.Field()
+    categorieen = scrapy.Field()
+    afbeelding_url = scrapy.Field()
     
 
     
