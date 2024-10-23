@@ -6,7 +6,6 @@ class EvieNlSpider(scrapy.Spider):
     allowed_domains = ["evie.nl"]
     start_urls = ["https://evie.nl/resultaten/"]
 
-    # Pagina-instelling voor JSON-export en het instellen van de MySQL pipeline
     custom_settings = {
         'FEEDS': {
             'JSON_bestanden/evie.json': {  
@@ -21,21 +20,40 @@ class EvieNlSpider(scrapy.Spider):
     }
 
     def parse(self, response):
-        # Select all the cards in the grid
+        # Loop through each activity
         for activity in response.css('a.group'):
             evie = Evie()
 
-            # Extract the fields and assign them to the item
-            evie['titel'] = activity.css('h3::text').get()
-            evie['categorieen'] = activity.css('div.flex.items-center.gap-2 span::text').getall()
-            evie['link'] = activity.css('a::attr(href)').get()
-            evie['afbeelding_url'] = activity.css('img::attr(src)').get()
+            # Extract basic fields
+            evie['Titel'] = activity.css('h3::text').get()
+            evie['Categorieën'] = activity.css('div.flex.items-center.gap-2 span::text').getall()
+            evie['Link'] = activity.css('a::attr(href)').get()
+            evie['Afbeelding_url'] = activity.css('img::attr(src)').get()
 
-            
-            # Yield the populated item
-            yield evie
+            # Follow the link to the detail page
+            if evie['Link']:
+                yield response.follow(evie["Link"], callback=self.parse_detail, meta={'evie': evie})
 
-        # Pagination (if needed)
-        # next_page = response.css('a.next::attr(href)').get()
-        # if next_page:
-        #     yield scrapy.Request(url=next_page, callback=self.parse)
+       
+
+    def parse_detail(self, response):
+        evie = response.meta['evie']
+
+        # Scrape the description (including p, li, strong, etc.)
+        description_parts = response.css('div#rspeak_read_3647 *::text').getall()
+        if description_parts:
+            description = ' '.join([part.strip() for part in description_parts if part.strip()])
+            evie['Beschrijving'] = description
+        else:
+            evie['Beschrijving'] = 'Geen beschrijving gevonden'
+
+        # Scrape the "Meer over de app" link (found within a specific button class)
+        more_info_link = response.css('a.breakdance-link.button-atom::attr(href)').get()
+        evie['Link_naar_meer_info'] = more_info_link
+
+        # Scrape the text on the button (e.g., 'Meer over de app')
+        button_text = response.css('a.breakdance-link span.button-atom__text::text').get()
+        evie['Tekst_knop'] = button_text
+
+        # Yield the populated item
+        yield evie

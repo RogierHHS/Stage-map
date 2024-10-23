@@ -84,39 +84,42 @@ class Thuisarts(scrapy.Item):
 
 
 class WorkshopsZVE(scrapy.Item):
-    titel = scrapy.Field()
-    organisatie = scrapy.Field()
-    beschrijving_kort = scrapy.Field()
-    datum = scrapy.Field()
-    beschrijving_lang = scrapy.Field()
-    image_url = scrapy.Field()
-    link_workshop = scrapy.Field()
-    aantal_bijeenkomsten = scrapy.Field()
-    eerste_bijeenkomst = scrapy.Field()
-    laatste_bijeenkomst = scrapy.Field()
-    inschrijven_kan_tot = scrapy.Field()
-    datum_bijeenkomst = scrapy.Field()
+    Titel = scrapy.Field()
+    Organisatie = scrapy.Field()
+    Beschrijving_kort = scrapy.Field()
+    Datum = scrapy.Field()
+    Beschrijving_lang = scrapy.Field()
+    Image_url = scrapy.Field()
+    Link_workshop = scrapy.Field()
+    Aantal_bijeenkomsten = scrapy.Field()
+    Eerste_bijeenkomst = scrapy.Field()
+    Laatste_bijeenkomst = scrapy.Field()
+    Inschrijven_kan_tot = scrapy.Field()
+    Datum_bijeenkomst = scrapy.Field()
 
 class Vierstroom(scrapy.Item):
-    titel = scrapy.Field()
-    beschrijving_kort = scrapy.Field()
-    categorie = scrapy.Field()
-    image_url = scrapy.Field()
-    link = scrapy.Field()
+    Titel = scrapy.Field()
+    Beschrijving_kort = scrapy.Field()
+    Categorie = scrapy.Field()
+    Image_url = scrapy.Field()
+    Link = scrapy.Field()
     Beschrijving_lang = scrapy.Field()
 
 class Scheidingspunt(scrapy.Item):
-    titel = scrapy.Field()
-    link = scrapy.Field()
-    wat = scrapy.Field()
-    voor_wie = scrapy.Field()
-    wanneer = scrapy.Field()
+    Titel = scrapy.Field()
+    Link = scrapy.Field()
+    Wat = scrapy.Field()
+    Voor_wie = scrapy.Field()
+    Wanneer = scrapy.Field()
 
 class Evie(scrapy.Item):
-    titel = scrapy.Field()
-    link = scrapy.Field()
-    categorieen = scrapy.Field()
-    afbeelding_url = scrapy.Field()
+    Titel = scrapy.Field()
+    Link = scrapy.Field()
+    Categorieën = scrapy.Field()
+    Afbeelding_url = scrapy.Field()
+    Beschrijving = scrapy.Field()
+    Link_naar_meer_info = scrapy.Field()
+    Tekst_knop = scrapy.Field()
     
 
     
