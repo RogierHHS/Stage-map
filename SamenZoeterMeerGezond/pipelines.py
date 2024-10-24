@@ -123,6 +123,8 @@ class MySQLPipeline:
             return self.process_item_vierstroom(item)
         elif spider.name == 'scheidingspunt':
             return self.process_item_scheidingspunt(item)
+        elif spider.name == 'evie':
+            return self.process_item_evie(item)
         else:
             return item
 
@@ -415,6 +417,36 @@ class MySQLPipeline:
             self.logger.info(f"Item inserted into scheidingspunt: {item.get('titel')}")
         except mysql.connector.Error as err:
             self.logger.error(f"Error inserting item {item.get('titel')}: {err}")
+            self.conn.rollback()
+        return item
+    
+    def process_item_evie(self, item):
+        try:
+            self.cursor.execute("""
+                INSERT INTO evie_data
+                (Titel, Categorieën, Link, Afbeelding_url, Beschrijving, Link_naar_meer_info, Tekst_knop)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    Titel = VALUES(Titel),
+                    Categorieën = VALUES(Categorieën),
+                    Link = VALUES(Link),
+                    Afbeelding_url = VALUES(Afbeelding_url),
+                    Beschrijving = VALUES(Beschrijving),
+                    Link_naar_meer_info = VALUES(Link_naar_meer_info),
+                    Tekst_knop = VALUES(Tekst_knop)
+            """, (
+                item.get('Titel'),
+                ','.join(item.get('Categorieën', [])),
+                item.get('Link'),
+                item.get('Afbeelding_url'),
+                item.get('Beschrijving'),
+                item.get('Link_naar_meer_info'),
+                item.get('Tekst_knop')
+            ))
+            self.conn.commit()
+            self.logger.info(f"Item inserted into evie_activiteiten: {item.get('Titel')}")
+        except mysql.connector.Error as err:
+            self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
             self.conn.rollback()
         return item
         

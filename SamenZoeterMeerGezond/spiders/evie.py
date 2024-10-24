@@ -14,8 +14,8 @@ class EvieNlSpider(scrapy.Spider):
             }
         },
         'ITEM_PIPELINES': {
-            # 'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
-            # 'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,
+            'SamenZoeterMeerGezond.pipelines.CleanDataPipeline': 300,
+            'SamenZoeterMeerGezond.pipelines.MySQLPipeline': 400,
         }
     }
 
@@ -39,20 +39,27 @@ class EvieNlSpider(scrapy.Spider):
     def parse_detail(self, response):
         evie = response.meta['evie']
 
-        # Scrape the description (including p, li, strong, etc.)
-        description_parts = response.css('div#rspeak_read_3647 *::text').getall()
-        if description_parts:
-            description = ' '.join([part.strip() for part in description_parts if part.strip()])
-            evie['Beschrijving'] = description
-        else:
-            evie['Beschrijving'] = 'Geen beschrijving gevonden'
+        # Selecteer alle divs met de class 'bde-text-2738-129 bde-text'
+        description_divs = response.css('div.bde-text-2738-129.bde-text')
+
+        for div in description_divs:
+            # Selecteer de div waarvan het id begint met 'rspeak_read_'
+            rspeak_div = div.xpath('.//div[starts-with(@id, "rspeak_read_")]')
+            
+            if rspeak_div:
+                # Haal alle tekstinhoud op, ongeacht de nested tags zoals <p>, <strong>, <li>, etc.
+                description_text = rspeak_div.xpath('.//text()').getall()
+                # Combineer de tekstfragmenten en verwijder overbodige whitespace
+                evie["Beschrijving"] = ' '.join(text.strip() for text in description_text if text.strip())
+            else: 
+                evie["Beschrijving"] = "Geen beschrijving gevonden"
 
         # Scrape the "Meer over de app" link (found within a specific button class)
-        more_info_link = response.css('a.breakdance-link.button-atom::attr(href)').get()
+        more_info_link = response.css('a.breakdance-link.button-atom.button-atom--primary.bde-button__button::attr(href)').get()
         evie['Link_naar_meer_info'] = more_info_link
 
         # Scrape the text on the button (e.g., 'Meer over de app')
-        button_text = response.css('a.breakdance-link span.button-atom__text::text').get()
+        button_text = response.css('a.breakdance-link.button-atom.button-atom--primary.bde-button__button span::text').get()
         evie['Tekst_knop'] = button_text
 
         # Yield the populated item
