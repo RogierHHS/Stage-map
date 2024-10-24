@@ -120,6 +120,16 @@ class Evie(scrapy.Item):
     Beschrijving = scrapy.Field()
     Link_naar_meer_info = scrapy.Field()
     Tekst_knop = scrapy.Field()
+
+class NLZVE(scrapy.Item):
+    Titel = scrapy.Field()
+    Link = scrapy.Field()
+    Afbeelding_url = scrapy.Field()
+    Beschrijving_kort = scrapy.Field()
+    Locatie = scrapy.Field()
+    Begintijd = scrapy.Field()
+    Eindtijd = scrapy.Field()
+    Beschrijving_lang = scrapy.Field()
     
 
     

@@ -125,6 +125,8 @@ class MySQLPipeline:
             return self.process_item_scheidingspunt(item)
         elif spider.name == 'evie':
             return self.process_item_evie(item)
+        elif spider.name == 'NLZVE':
+            return self.process_item_nlzve(item)
         else:
             return item
 
@@ -449,4 +451,35 @@ class MySQLPipeline:
             self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
             self.conn.rollback()
         return item
+    
+
+    def process_item_nlzve(self, item):
+    # Query om gegevens op te slaan in de 'activiteiten_nlzve' tabel
+        self.cursor.execute("""
+            INSERT INTO activiteiten_nlzve 
+            (Titel, Locatie, Begintijd, Eindtijd, Beschrijving_kort, Beschrijving_lang, Link, Afbeelding_url)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE 
+                Titel = VALUES(Titel),
+                Locatie = VALUES(Locatie),
+                Begintijd = VALUES(Begintijd),
+                Eindtijd = VALUES(Eindtijd),
+                Beschrijving_kort = VALUES(Beschrijving_kort),
+                Beschrijving_lang = VALUES(Beschrijving_lang),
+                Link = VALUES(Link),
+                Afbeelding_url = VALUES(Afbeelding_url)
+        """, (
+            item['Titel'],
+            item['Locatie'],
+            item['Begintijd'],
+            item['Eindtijd'],
+            item['Beschrijving_kort'],
+            item['Beschrijving_lang'],
+            item['Link'],
+            item['Afbeelding_url']
+        ))
+        self.conn.commit()
+        return item
+
         
+    
