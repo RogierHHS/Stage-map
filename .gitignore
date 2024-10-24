@@ -6,3 +6,5 @@ Stage-map/
 *.sql
 #Omgevingsbestanden voor SQL koppelen
 .env
+#Omgevingsbestanden voor SQL koppelen
+.ini
