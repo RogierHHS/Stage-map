@@ -92,17 +92,31 @@ class MySQLPipeline:
         db_user = os.getenv('DB_USER')
         db_password = os.getenv('DB_PASSWORD')
         db_name = os.getenv('DB_NAME')
+        db_ssl_ca = os.getenv('DB_SSL_CA')  # Removed comma
 
-        self.conn = mysql.connector.connect(
-            host= db_host,
-            user= db_user,
-            password= db_password,
-            database= db_name
-        )
-        self.cursor = self.conn.cursor()
+        # Ensure db_ssl_ca is a string
+        if not os.path.isabs(db_ssl_ca):
+            db_ssl_ca = os.path.join(os.getcwd(), db_ssl_ca)
+
+        try:
+            self.conn = mysql.connector.connect(
+                host=db_host,
+                user=db_user,
+                password=db_password,
+                database=db_name,
+                ssl_ca=db_ssl_ca
+            )
+            self.cursor = self.conn.cursor()
+            self.logger.info("Database connection established successfully.")
+        except mysql.connector.Error as err:
+            self.logger.error(f"Error connecting to database: {err}")
+            self.conn = None
 
     def close_spider(self, spider):
-        self.conn.close()
+        if self.conn:
+            self.conn.close()
+            self.logger.info("Database connection closed.")
+
 
     def process_item(self, item, spider):
         if spider.name == 'IZ-InDeWijkSpider':
@@ -131,34 +145,38 @@ class MySQLPipeline:
             return item
 
     def process_item_iz(self, item):
-        # Query om gegevens op te slaan in de 'activiteiten_iz' tabel
-        self.cursor.execute("""
-            INSERT INTO activiteiten 
-            (Titel, Link, Datum_numeriek, Datum_text, Beschrijving, Starttijd, Eindtijd, Locatie, URL_afbeelding, Extra_beschrijving)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE 
-                Titel = VALUES(Titel),
-                Datum_numeriek = VALUES(Datum_numeriek),
-                Datum_text = VALUES(Datum_text),
-                Beschrijving = VALUES(Beschrijving),
-                Starttijd = VALUES(Starttijd),
-                Eindtijd = VALUES(Eindtijd),
-                Locatie = VALUES(Locatie),
-                URL_afbeelding = VALUES(URL_afbeelding),
-                Extra_beschrijving = VALUES(Extra_beschrijving)
-        """, (
-            item['Titel'],
-            item['Link'],
-            item['Datum_numeriek'],
-            item['Datum_text'],
-            item['Beschrijving'],
-            item['Starttijd'],
-            item['Eindtijd'],
-            item['Locatie'],
-            item['URL_afbeelding'],
-            item['Extra_beschrijving']
-        ))
-        self.conn.commit()
+        try:
+            self.cursor.execute("""
+                INSERT INTO activiteiten 
+                (Titel, Link, Datum_numeriek, Datum_text, Beschrijving, Starttijd, Eindtijd, Locatie, URL_afbeelding, Extra_beschrijving)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    Titel = VALUES(Titel),
+                    Datum_numeriek = VALUES(Datum_numeriek),
+                    Datum_text = VALUES(Datum_text),
+                    Beschrijving = VALUES(Beschrijving),
+                    Starttijd = VALUES(Starttijd),
+                    Eindtijd = VALUES(Eindtijd),
+                    Locatie = VALUES(Locatie),
+                    URL_afbeelding = VALUES(URL_afbeelding),
+                    Extra_beschrijving = VALUES(Extra_beschrijving)
+            """, (
+                item['Titel'],
+                item['Link'],
+                item['Datum_numeriek'],
+                item['Datum_text'],
+                item['Beschrijving'],
+                item['Starttijd'],
+                item['Eindtijd'],
+                item['Locatie'],
+                item['URL_afbeelding'],
+                item['Extra_beschrijving']
+            ))
+            self.conn.commit()
+            self.logger.info(f"Item inserted into activiteiten: {item.get('Titel')}")
+        except mysql.connector.Error as err:
+            self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
+            self.conn.rollback()
         return item
 
     def process_item_zte(self, item):

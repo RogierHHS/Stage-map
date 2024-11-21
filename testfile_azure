@@ -1,0 +1,34 @@
+import mysql.connector
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+db_host = os.getenv('DB_HOST')
+db_user = os.getenv('DB_USER')
+db_password = os.getenv('DB_PASSWORD')
+db_name = os.getenv('DB_NAME')
+db_ssl_ca = os.getenv('DB_SSL_CA')
+
+if not os.path.isfile(db_ssl_ca):
+    print(f"SSL certificate file not found at {db_ssl_ca}")
+else:
+    print(f"Using SSL certificate at {db_ssl_ca}")
+
+try:
+    conn = mysql.connector.connect(
+        host=db_host,
+        user=db_user,
+        password=db_password,
+        database=db_name,
+        ssl_ca=db_ssl_ca,
+        ssl_verify_cert=True
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT DATABASE();")
+    result = cursor.fetchone()
+    print(f"Connected to database: {result[0]}")
+    cursor.close()
+    conn.close()
+except mysql.connector.Error as err:
+    print(f"Error: {err}")
