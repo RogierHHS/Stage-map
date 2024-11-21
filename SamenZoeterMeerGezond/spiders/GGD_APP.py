@@ -8,10 +8,11 @@ class GgdAppSpider(scrapy.Spider):
     allowed_domains = ["ggdappstore.nl"]
     start_urls = ["https://ggdappstore.nl/Appstore/Homepage/Sessie,Medewerker,Button"]
 
-    # Pagina-instelling voor JSON-export en het instellen van de MySQL pipeline
+    # Exporteren naar JSON en instellen van throttling parameters
     custom_settings = {
         'FEEDS': {
             'JSON_bestanden/GGD_Appstore.json': {  
+                'format': 'json',
                 'overwrite': True,
             }
         },

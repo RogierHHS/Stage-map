@@ -77,7 +77,7 @@ class CleanDataPipeline:
     
     def clean_scheidingspunt_item(self, item):
         # Controleer of de titel en beschrijving niet leeg zijn
-        if not item['titel'] or not item['wat'] or not item['voor_wie'] or not item['wanneer']:
+        if not item['Titel'] or not item['Wat'] or not item['Voor_wie'] or not item['Wanneer']:
             raise DropItem(f"Incomplete item: {item}")
 
 
@@ -345,18 +345,18 @@ class MySQLPipeline:
                     inschrijven_kan_tot = VALUES(inschrijven_kan_tot),
                     datum_bijeenkomst = VALUES(datum_bijeenkomst)
             """, (
-                item.get('titel'),
-                item.get('organisatie'),
-                item.get('beschrijving_kort'),
-                item.get('beschrijving_lang'),
-                item.get('datum'),
-                item.get('image_url'),
-                item.get('link_workshop'),
-                item.get('aantal_bijeenkomsten'),
-                item.get('eerste_bijeenkomst'),
-                item.get('laatste_bijeenkomst'),
-                item.get('inschrijven_kan_tot'),
-                item.get('datum_bijeenkomst')
+                item.get('Titel'),
+                item.get('Organisatie'),
+                item.get('Beschrijving_kort'),
+                item.get('Beschrijving_lang'),
+                item.get('Datum'),
+                item.get('Image_url'),
+                item.get('Link_workshop'),
+                item.get('Aantal_bijeenkomsten'),
+                item.get('Eerste_bijeenkomst'),
+                item.get('Laatste_bijeenkomst'),
+                item.get('Inschrijven_kan_tot'),
+                item.get('Datum_bijeenkomst')
             ))
             self.conn.commit()
             self.logger.info(f"Item inserted into activiteiten_zve: {item.get('titel')}")
@@ -381,11 +381,11 @@ class MySQLPipeline:
                     Beschrijving_lang = VALUES(Beschrijving_lang)
                     
         """, (
-            item.get('titel'),
-            item.get('beschrijving_kort'),
-            item.get('categorie'),
-            item.get('image_url'),
-            item.get('link'),
+            item.get('Titel'),
+            item.get('Beschrijving_kort'),
+            item.get('Categorie'),
+            item.get('Image_url'),
+            item.get('Link'),
             item.get('Beschrijving_lang')
         ))
             self.conn.commit()
@@ -409,11 +409,11 @@ class MySQLPipeline:
                     wanneer = VALUES(wanneer),
                     link = VALUES(link)
         """, (
-            item.get('titel'),
-            item.get('link'),
-            item.get('wat'),
-            item.get('voor_wie'),
-            item.get('wanneer')
+            item.get('Titel'),
+            item.get('Link'),
+            item.get('Wat'),
+            item.get('Voor_wie'),
+            item.get('Wanneer')
         ))
             self.conn.commit()
             self.logger.info(f"Item inserted into scheidingspunt: {item.get('titel')}")

@@ -29,16 +29,16 @@ class ScheidingspuntSpider(scrapy.Spider):
             activiteit_item = Scheidingspunt()
 
             # Scrape de titel en link van de activiteit
-            activiteit_item['titel'] = activity.css('h3 a.moduleItemTitle::text').get(default='').strip()
-            activiteit_item['link'] = response.urljoin(activity.css('h3 a.moduleItemTitle::attr(href)').get())
+            activiteit_item['Titel'] = activity.css('h3 a.moduleItemTitle::text').get(default='').strip()
+            activiteit_item['Link'] = response.urljoin(activity.css('h3 a.moduleItemTitle::attr(href)').get())
 
             # Scrape de beschrijving (Wat, Voor wie, Wanneer)
             beschrijving = activity.css('div.moduleItemIntrotext').get()
 
             # Extract de velden voor "Wat", "Voor wie" en "Wanneer"
-            activiteit_item['wat'] = activity.css('div.moduleItemIntrotext p:contains("Wat")::text').get(default='').strip()
-            activiteit_item['voor_wie'] = activity.css('div.moduleItemIntrotext p:contains("Voor wie")::text').get(default='').strip()
-            activiteit_item['wanneer'] = activity.css('div.moduleItemIntrotext p:contains("Wanneer")::text').get(default='').strip()
+            activiteit_item['Wat'] = activity.css('div.moduleItemIntrotext p:contains("Wat")::text').get(default='').strip()
+            activiteit_item['Voor_wie'] = activity.css('div.moduleItemIntrotext p:contains("Voor wie")::text').get(default='').strip()
+            activiteit_item['Wanneer'] = activity.css('div.moduleItemIntrotext p:contains("Wanneer")::text').get(default='').strip()
 
             # Yield het item om op te slaan in de output (bijv. JSON of een database)
             yield activiteit_item

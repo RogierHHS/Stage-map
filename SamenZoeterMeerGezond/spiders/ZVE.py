@@ -25,19 +25,19 @@ class ZveSpider(scrapy.Spider):
 
         for workshop in workshops:
             ZVE = WorkshopsZVE()
-            ZVE['titel'] = workshop.css('div.c-card__body a.c-card__title-link h2.c-card__title::text').get().strip()
-            ZVE['organisatie'] = workshop.css('div.c-card__body span.c-card__profile-text::text').get().strip()
-            ZVE['beschrijving_kort'] = workshop.css('div.c-card__body p.c-card__description::text').get().strip()
+            ZVE['Titel'] = workshop.css('div.c-card__body a.c-card__title-link h2.c-card__title::text').get().strip()
+            ZVE['Organisatie'] = workshop.css('div.c-card__body span.c-card__profile-text::text').get().strip()
+            ZVE['Beschrijving_kort'] = workshop.css('div.c-card__body p.c-card__description::text').get().strip()
             datum_list = workshop.css('div.c-card__footer ul.c-card__tags li.c-card__tag::text').getall()
-            ZVE['datum'] = datum_list[-1] if datum_list else None
+            ZVE['Datum'] = datum_list[-1] if datum_list else None
 
             # Ophalen van de relatieve link naar de detailpagina
             relative_link = workshop.css('div.c-card__body a.c-card__title-link::attr(href)').get()
             link_workshop = response.urljoin(relative_link)
-            ZVE['link_workshop'] = link_workshop
+            ZVE['Link_workshop'] = link_workshop
 
             # Ophalen van de afbeeldings-URL
-            ZVE['image_url'] = workshop.css('div.c-card__header picture.c-card__background img.c-card__background-image::attr(src)').get()
+            ZVE['Image_url'] = workshop.css('div.c-card__header picture.c-card__background img.c-card__background-image::attr(src)').get()
 
             # Maak een request naar de detailpagina en stuur het item door via meta
             yield response.follow(
@@ -54,7 +54,7 @@ class ZveSpider(scrapy.Spider):
             'div.grid__cell.unit-9-12.unit-1-1--lap-portrait.unit-1-1--palm-landscape.link--underlined p::text'
         ).getall()
         beschrijving_lang = ' '.join(text.strip() for text in beschrijving_lang_list if text.strip())
-        ZVE['beschrijving_lang'] = beschrijving_lang
+        ZVE['Beschrijving_lang'] = beschrijving_lang
 
 
 
@@ -72,22 +72,22 @@ class ZveSpider(scrapy.Spider):
                 value = dd.strip()
 
                 if key == 'Aantal bijeenkomsten':
-                    ZVE['aantal_bijeenkomsten'] = value
+                    ZVE['Aantal_bijeenkomsten'] = value
                 elif key == 'Eerste bijeenkomst':
-                    ZVE['eerste_bijeenkomst'] = value
+                    ZVE['Eerste_bijeenkomst'] = value
                 elif key == 'Laatste bijeenkomst':
-                    ZVE['laatste_bijeenkomst'] = value
+                    ZVE['Laatste_bijeenkomst'] = value
                 elif key == 'Inschrijven kan tot':
-                    ZVE['inschrijven_kan_tot'] = value
+                    ZVE['Inschrijven_kan_tot'] = value
                 elif key == 'Datum bijeenkomst':
-                    ZVE['datum_bijeenkomst'] = value
+                    ZVE['Datum_bijeenkomst'] = value
 
         # Zorg ervoor dat ontbrekende velden op None staan
-        ZVE.setdefault('aantal_bijeenkomsten', None)
-        ZVE.setdefault('eerste_bijeenkomst', None)
-        ZVE.setdefault('laatste_bijeenkomst', None)
-        ZVE.setdefault('inschrijven_kan_tot', None)
-        ZVE.setdefault('datum_bijeenkomst', None)
+        ZVE.setdefault('Aantal_bijeenkomsten', None)
+        ZVE.setdefault('Eerste_bijeenkomst', None)
+        ZVE.setdefault('Laatste_bijeenkomst', None)
+        ZVE.setdefault('Inschrijven_kan_tot', None)
+        ZVE.setdefault('Datum_bijeenkomst', None)
 
         yield ZVE
 
