@@ -8,3 +8,6 @@ Stage-map/
 .env
 #Omgevingsbestanden voor SQL koppelen
 .ini
+
+.python_packages
+__pycache__

@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\rogie\OneDrive\Bureaublad\Git-Clone-Stage\Stage-map\myvenv"
+VIRTUAL_ENV="C:\Users\rogie\OneDrive\Bureaublad\Backup-stage\Stage-map\myvenv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
