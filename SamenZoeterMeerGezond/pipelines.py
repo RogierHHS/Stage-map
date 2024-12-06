@@ -32,7 +32,6 @@ class CleanDataPipeline:
         return item
 
     def clean_iz_item(self, item):
-        # Verwijder HTML-tags uit de extra beschrijving en andere schoonmaakacties
         if 'Extra_beschrijving' in item:
             item['Extra_beschrijving'] = remove_tags(item['Extra_beschrijving'])
             item['Extra_beschrijving'] = re.sub(r'\s+', ' ', item['Extra_beschrijving']).strip()
@@ -67,19 +66,16 @@ class CleanDataPipeline:
             item['Samenvatting'] = re.sub(r'\s+', ' ', item['Samenvatting'])
             item['Samenvatting'] = item['Samenvatting'].replace('\n\t', ' ').strip()
 
-        # Als je extra schoonmaakacties nodig hebt voor de situaties, voeg ze hier toe
         if 'Situaties' in item:
             for situatie in item['Situaties']:
                 if 'Titel' in situatie:
                     situatie['Titel'] = situatie['Titel'].strip()
                 if 'Link' in situatie:
                     situatie['Link'] = situatie['Link'].strip()
-    
+
     def clean_scheidingspunt_item(self, item):
-        # Controleer of de titel en beschrijving niet leeg zijn
         if not item['Titel'] or not item['Wat'] or not item['Voor_wie'] or not item['Wanneer']:
             raise DropItem(f"Incomplete item: {item}")
-
 
 class MySQLPipeline:
     def __init__(self):
@@ -92,10 +88,10 @@ class MySQLPipeline:
         db_user = os.getenv('DB_USER')
         db_password = os.getenv('DB_PASSWORD')
         db_name = os.getenv('DB_NAME')
-        db_ssl_ca = os.getenv('DB_SSL_CA')  # Removed comma
+        db_ssl_ca = os.getenv('DB_SSL_CA')
 
         # Ensure db_ssl_ca is a string
-        if not os.path.isabs(db_ssl_ca):
+        if db_ssl_ca and not os.path.isabs(db_ssl_ca):
             db_ssl_ca = os.path.join(os.getcwd(), db_ssl_ca)
 
         try:
@@ -104,10 +100,15 @@ class MySQLPipeline:
                 user=db_user,
                 password=db_password,
                 database=db_name,
-                ssl_ca=db_ssl_ca
+                ssl_ca=db_ssl_ca if db_ssl_ca else None
             )
             self.cursor = self.conn.cursor()
             self.logger.info("Database connection established successfully.")
+
+            # Leegmaken van de relevante tabel op basis van de spidernaam
+            table_to_clear = self.get_table_name(spider.name)
+            if table_to_clear:
+                self.clear_table(table_to_clear)
         except mysql.connector.Error as err:
             self.logger.error(f"Error connecting to database: {err}")
             self.conn = None
@@ -117,6 +118,32 @@ class MySQLPipeline:
             self.conn.close()
             self.logger.info("Database connection closed.")
 
+    def get_table_name(self, spider_name):
+        """Retourneert de tabelnaam op basis van de naam van de spider."""
+        mapping = {
+            'IZ-InDeWijkSpider': 'activiteiten',
+            'ZTE': 'activiteiten_zte',
+            'ZMA': 'activiteiten_zma',
+            'UIT': 'activiteiten_UIT',
+            'GGD_APP': 'apps_ggd',
+            'thuisarts': 'thuisarts',
+            'ZVE': 'workshops',
+            'vierstroom': 'vierstroom_nieuws',
+            'scheidingspunt': 'activiteiten_scheidingpunt',
+            'evie': 'evie_data',
+            'NLZVE': 'activiteiten_nlzve'
+        }
+        return mapping.get(spider_name)
+
+    def clear_table(self, table_name):
+        """Leegmaakt de opgegeven tabel."""
+        try:
+            self.cursor.execute(f"TRUNCATE TABLE `{table_name}`")
+            self.conn.commit()
+            self.logger.info(f"Tabel '{table_name}' is leeggemaakt.")
+        except mysql.connector.Error as err:
+            self.logger.error(f"Error bij het leegmaken van tabel {table_name}: {err}")
+            self.conn.rollback()
 
     def process_item(self, item, spider):
         if spider.name == 'IZ-InDeWijkSpider':
@@ -180,105 +207,119 @@ class MySQLPipeline:
         return item
 
     def process_item_zte(self, item):
-        # Query om gegevens op te slaan in de 'activiteiten_zte' tabel
-        self.cursor.execute("""
-            INSERT INTO activiteiten_zte 
-            (Titel, Link, Url_header_afbeelding, Datum_numeriek, Datum_text, Url_afbeelding, Beschrijving)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE 
-                Titel = VALUES(Titel),
-                Datum_numeriek = VALUES(Datum_numeriek),
-                Datum_text = VALUES(Datum_text),
-                Url_header_afbeelding = VALUES(Url_header_afbeelding),
-                Url_afbeelding = VALUES(Url_afbeelding),
-                Beschrijving = VALUES(Beschrijving)
-        """, (
-            item['Titel'],
-            item['Link'],
-            item['Url_header_afbeelding'],
-            item['Datum_numeriek'],
-            item['Datum_text'],
-            item['Url_afbeelding'],
-            item['Beschrijving']
-        ))
-        self.conn.commit()
+        try:
+            # Query om gegevens op te slaan in de 'activiteiten_zte' tabel
+            self.cursor.execute("""
+                INSERT INTO activiteiten_zte 
+                (Titel, Link, Url_header_afbeelding, Datum_numeriek, Datum_text, Url_afbeelding, Beschrijving)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    Titel = VALUES(Titel),
+                    Datum_numeriek = VALUES(Datum_numeriek),
+                    Datum_text = VALUES(Datum_text),
+                    Url_header_afbeelding = VALUES(Url_header_afbeelding),
+                    Url_afbeelding = VALUES(Url_afbeelding),
+                    Beschrijving = VALUES(Beschrijving)
+            """, (
+                item['Titel'],
+                item['Link'],
+                item['Url_header_afbeelding'],
+                item['Datum_numeriek'],
+                item['Datum_text'],
+                item['Url_afbeelding'],
+                item['Beschrijving']
+            ))
+            self.conn.commit()
+            self.logger.info(f"Item inserted into activiteiten_zte: {item.get('Titel')}")
+        except mysql.connector.Error as err:
+            self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
+            self.conn.rollback()
         return item
 
     def process_item_zma(self, item):
-        # Query om gegevens op te slaan in de 'activiteiten_zma' tabel
-        self.cursor.execute("""
-            INSERT INTO activiteiten_zma 
-            (Titel, Link, Beschrijving, Startdatum, Categorie_1, Categorie_2, Categorie_3, Categorie_4, Url_header_afbeelding, Extra_beschrijving, Url_afbeelding)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE 
-                Titel = VALUES(Titel),
-                Beschrijving = VALUES(Beschrijving),
-                Startdatum = VALUES(Startdatum),
-                Categorie_1 = VALUES(Categorie_1),
-                Categorie_2 = VALUES(Categorie_2),
-                Categorie_3 = VALUES(Categorie_3),
-                Categorie_4 = VALUES(Categorie_4),
-                Url_header_afbeelding = VALUES(Url_header_afbeelding),
-                Extra_beschrijving = VALUES(Extra_beschrijving),
-                Url_afbeelding = VALUES(Url_afbeelding)
-        """, (
-            item['Titel'],
-            item['Link'],
-            item['Beschrijving'],
-            item['Startdatum'],
-            item['Categorie_1'],
-            item['Categorie_2'],
-            item['Categorie_3'],
-            item['Categorie_4'],
-            item['Url_header_afbeelding'],
-            item['Extra_beschrijving'],
-            item['Url_afbeelding']
-        ))
-        self.conn.commit()
+        try:
+            # Query om gegevens op te slaan in de 'activiteiten_zma' tabel
+            self.cursor.execute("""
+                INSERT INTO activiteiten_zma 
+                (Titel, Link, Beschrijving, Startdatum, Categorie_1, Categorie_2, Categorie_3, Categorie_4, Url_header_afbeelding, Extra_beschrijving, Url_afbeelding)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    Titel = VALUES(Titel),
+                    Beschrijving = VALUES(Beschrijving),
+                    Startdatum = VALUES(Startdatum),
+                    Categorie_1 = VALUES(Categorie_1),
+                    Categorie_2 = VALUES(Categorie_2),
+                    Categorie_3 = VALUES(Categorie_3),
+                    Categorie_4 = VALUES(Categorie_4),
+                    Url_header_afbeelding = VALUES(Url_header_afbeelding),
+                    Extra_beschrijving = VALUES(Extra_beschrijving),
+                    Url_afbeelding = VALUES(Url_afbeelding)
+            """, (
+                item['Titel'],
+                item['Link'],
+                item['Beschrijving'],
+                item['Startdatum'],
+                item['Categorie_1'],
+                item['Categorie_2'],
+                item['Categorie_3'],
+                item['Categorie_4'],
+                item['Url_header_afbeelding'],
+                item['Extra_beschrijving'],
+                item['Url_afbeelding']
+            ))
+            self.conn.commit()
+            self.logger.info(f"Item inserted into activiteiten_zma: {item.get('Titel')}")
+        except mysql.connector.Error as err:
+            self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
+            self.conn.rollback()
         return item
 
     def process_item_uit(self, item):
-        # Query om gegevens op te slaan in de 'activiteiten_uit' tabel
-        self.cursor.execute("""
-            INSERT INTO activiteiten_UIT 
-            (Titel, Naam, Beschrijving, Datum, Starttijd, Eindtijd, Prijs, Straat, Postcode, Email, Bedrijf_Website, Url_plaatje)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE 
-                Naam = VALUES(Naam),
-                Beschrijving = VALUES(Beschrijving),
-                Datum = VALUES(Datum),
-                Starttijd = VALUES(Starttijd),
-                Eindtijd = VALUES(Eindtijd),
-                Prijs = VALUES(Prijs),
-                Straat = VALUES(Straat),
-                Postcode = VALUES(Postcode),
-                Email = VALUES(Email),
-                Bedrijf_Website = VALUES(Bedrijf_Website),
-                Url_plaatje = VALUES(Url_plaatje)
-        """, (
-            item['Titel'],
-            item['Naam'],  
-            item['Beschrijving'],
-            item['Datum'],
-            item['Starttijd'],
-            item['Eindtijd'],
-            item['Prijs'],
-            item['Straat'],
-            item['Postcode'],
-            item['Email'],
-            item['Bedrijf_Website'],
-            item['Url_plaatje']
-        ))
-        self.conn.commit()
+        try:
+            # Query om gegevens op te slaan in de 'activiteiten_UIT' tabel
+            self.cursor.execute("""
+                INSERT INTO activiteiten_UIT 
+                (Titel, Naam, Beschrijving, Datum, Starttijd, Eindtijd, Prijs, Straat, Postcode, Email, Bedrijf_Website, Url_plaatje)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    Naam = VALUES(Naam),
+                    Beschrijving = VALUES(Beschrijving),
+                    Datum = VALUES(Datum),
+                    Starttijd = VALUES(Starttijd),
+                    Eindtijd = VALUES(Eindtijd),
+                    Prijs = VALUES(Prijs),
+                    Straat = VALUES(Straat),
+                    Postcode = VALUES(Postcode),
+                    Email = VALUES(Email),
+                    Bedrijf_Website = VALUES(Bedrijf_Website),
+                    Url_plaatje = VALUES(Url_plaatje)
+            """, (
+                item['Titel'],
+                item['Naam'],  
+                item['Beschrijving'],
+                item['Datum'],
+                item['Starttijd'],
+                item['Eindtijd'],
+                item['Prijs'],
+                item['Straat'],
+                item['Postcode'],
+                item['Email'],
+                item['Bedrijf_Website'],
+                item['Url_plaatje']
+            ))
+            self.conn.commit()
+            self.logger.info(f"Item inserted into activiteiten_UIT: {item.get('Titel')}")
+        except mysql.connector.Error as err:
+            self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
+            self.conn.rollback()
         return item
-    
 
     def process_item_ggd(self, item):
         sql = """
             INSERT INTO apps_ggd 
             (App_naam, App_rating, Beschrijving_kort, Beschrijving_lang, 
             Dagelijks_Functioneren, Kwaliteit_van_Leven, Lichaamsfuncties, 
-            Meedoen, Mentaal_Welbevinden, Zingeving,Android_link, iOS_link, Desktop_link)
+            Meedoen, Mentaal_Welbevinden, Zingeving, Android_link, iOS_link, Desktop_link)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE 
                 App_naam = VALUES(App_naam),
@@ -313,12 +354,12 @@ class MySQLPipeline:
         try:
             self.cursor.execute(sql, data)
             self.conn.commit()
-            self.logger.info(f"Item inserted into apps_ggd: {item['App_naam']}")
+            self.logger.info(f"Item inserted into apps_ggd: {item.get('App_naam')}")
         except mysql.connector.Error as err:
-            self.logger.error(f"Error inserting item {item['App_naam']}: {err}")
+            self.logger.error(f"Error inserting item {item.get('App_naam')}: {err}")
             self.conn.rollback()
         return item
-    
+
     def process_item_thuisarts(self, item):
         try:
             # Loop door elke situatie en sla deze op samen met het onderwerp
@@ -342,11 +383,10 @@ class MySQLPipeline:
             self.logger.error(f"Error bij verwerken van item {item['Onderwerp']}: {err}")
             self.conn.rollback()
         return item
-    
-    
+
     def process_item_zve(self, item):
-        # Query om gegevens op te slaan in de 'activiteiten_zve' tabel
         try:
+            # Query om gegevens op te slaan in de 'workshops' tabel
             self.cursor.execute("""
                 INSERT INTO workshops 
                 (titel, organisatie, beschrijving_kort, beschrijving_lang, datum, image_url, link_workshop, aantal_bijeenkomsten, eerste_bijeenkomst, laatste_bijeenkomst, inschrijven_kan_tot, datum_bijeenkomst)
@@ -377,16 +417,15 @@ class MySQLPipeline:
                 item.get('Datum_bijeenkomst')
             ))
             self.conn.commit()
-            self.logger.info(f"Item inserted into activiteiten_zve: {item.get('titel')}")
+            self.logger.info(f"Item inserted into workshops: {item.get('Titel')}")
         except mysql.connector.Error as err:
-            self.logger.error(f"Error inserting item {item.get('titel')}: {err}")
+            self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
             self.conn.rollback()
         return item
 
-
     def process_item_vierstroom(self, item):
-        # Query om gegevens op te slaan in de 'vierstroom' tabel
         try:
+            # Query om gegevens op te slaan in de 'vierstroom_nieuws' tabel
             self.cursor.execute("""
                 INSERT INTO vierstroom_nieuws
                 (titel, beschrijving_kort, categorie, image_url, link, Beschrijving_lang)
@@ -397,49 +436,47 @@ class MySQLPipeline:
                     image_url = VALUES(image_url),
                     link = VALUES(link),
                     Beschrijving_lang = VALUES(Beschrijving_lang)
-                    
-        """, (
-            item.get('Titel'),
-            item.get('Beschrijving_kort'),
-            item.get('Categorie'),
-            item.get('Image_url'),
-            item.get('Link'),
-            item.get('Beschrijving_lang')
-        ))
+            """, (
+                item.get('Titel'),
+                item.get('Beschrijving_kort'),
+                item.get('Categorie'),
+                item.get('Image_url'),
+                item.get('Link'),
+                item.get('Beschrijving_lang')
+            ))
             self.conn.commit()
-            self.logger.info(f"Item inserted into vierstroom_nieuws: {item.get('titel')}")
+            self.logger.info(f"Item inserted into vierstroom_nieuws: {item.get('Titel')}")
         except mysql.connector.Error as err:
-            self.logger.error(f"Error inserting item {item.get('titel')}: {err}")
+            self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
             self.conn.rollback()
         return item
-                                
+
     def process_item_scheidingspunt(self, item):
-        # Query om gegevens op te slaan in de 'scheidingspunt' tabel
         try:
+            # Query om gegevens op te slaan in de 'activiteiten_scheidingpunt' tabel
             self.cursor.execute("""
                 INSERT INTO activiteiten_scheidingpunt
                 (titel, link, wat, voor_wie, wanneer)
                 VALUES (%s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE 
-                    titel = VALUES(titel),
                     wat = VALUES(wat),
                     voor_wie = VALUES(voor_wie),
                     wanneer = VALUES(wanneer),
                     link = VALUES(link)
-        """, (
-            item.get('Titel'),
-            item.get('Link'),
-            item.get('Wat'),
-            item.get('Voor_wie'),
-            item.get('Wanneer')
-        ))
+            """, (
+                item.get('Titel'),
+                item.get('Link'),
+                item.get('Wat'),
+                item.get('Voor_wie'),
+                item.get('Wanneer')
+            ))
             self.conn.commit()
-            self.logger.info(f"Item inserted into scheidingspunt: {item.get('titel')}")
+            self.logger.info(f"Item inserted into activiteiten_scheidingpunt: {item.get('Titel')}")
         except mysql.connector.Error as err:
-            self.logger.error(f"Error inserting item {item.get('titel')}: {err}")
+            self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
             self.conn.rollback()
         return item
-    
+
     def process_item_evie(self, item):
         try:
             self.cursor.execute("""
@@ -447,7 +484,6 @@ class MySQLPipeline:
                 (Titel, Categorieën, Link, Afbeelding_url, Beschrijving, Link_naar_meer_info, Tekst_knop)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE 
-                    Titel = VALUES(Titel),
                     Categorieën = VALUES(Categorieën),
                     Link = VALUES(Link),
                     Afbeelding_url = VALUES(Afbeelding_url),
@@ -464,40 +500,40 @@ class MySQLPipeline:
                 item.get('Tekst_knop')
             ))
             self.conn.commit()
-            self.logger.info(f"Item inserted into evie_activiteiten: {item.get('Titel')}")
+            self.logger.info(f"Item inserted into evie_data: {item.get('Titel')}")
         except mysql.connector.Error as err:
             self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
             self.conn.rollback()
         return item
-    
 
     def process_item_nlzve(self, item):
-    # Query om gegevens op te slaan in de 'activiteiten_nlzve' tabel
-        self.cursor.execute("""
-            INSERT INTO activiteiten_nlzve 
-            (Titel, Locatie, Begintijd, Eindtijd, Beschrijving_kort, Beschrijving_lang, Link, Afbeelding_url)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-            ON DUPLICATE KEY UPDATE 
-                Titel = VALUES(Titel),
-                Locatie = VALUES(Locatie),
-                Begintijd = VALUES(Begintijd),
-                Eindtijd = VALUES(Eindtijd),
-                Beschrijving_kort = VALUES(Beschrijving_kort),
-                Beschrijving_lang = VALUES(Beschrijving_lang),
-                Link = VALUES(Link),
-                Afbeelding_url = VALUES(Afbeelding_url)
-        """, (
-            item['Titel'],
-            item['Locatie'],
-            item['Begintijd'],
-            item['Eindtijd'],
-            item['Beschrijving_kort'],
-            item['Beschrijving_lang'],
-            item['Link'],
-            item['Afbeelding_url']
-        ))
-        self.conn.commit()
+        try:
+            # Query om gegevens op te slaan in de 'activiteiten_nlzve' tabel
+            self.cursor.execute("""
+                INSERT INTO activiteiten_nlzve 
+                (Titel, Locatie, Begintijd, Eindtijd, Beschrijving_kort, Beschrijving_lang, Link, Afbeelding_url)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE 
+                    Locatie = VALUES(Locatie),
+                    Begintijd = VALUES(Begintijd),
+                    Eindtijd = VALUES(Eindtijd),
+                    Beschrijving_kort = VALUES(Beschrijving_kort),
+                    Beschrijving_lang = VALUES(Beschrijving_lang),
+                    Link = VALUES(Link),
+                    Afbeelding_url = VALUES(Afbeelding_url)
+            """, (
+                item['Titel'],
+                item['Locatie'],
+                item['Begintijd'],
+                item['Eindtijd'],
+                item['Beschrijving_kort'],
+                item['Beschrijving_lang'],
+                item['Link'],
+                item['Afbeelding_url']
+            ))
+            self.conn.commit()
+            self.logger.info(f"Item inserted into activiteiten_nlzve: {item.get('Titel')}")
+        except mysql.connector.Error as err:
+            self.logger.error(f"Error inserting item {item.get('Titel')}: {err}")
+            self.conn.rollback()
         return item
-
-        
-    
