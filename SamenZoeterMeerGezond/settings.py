@@ -8,7 +8,7 @@
 # LOG_FILE = 'scrapy_log.txt'
 
 # # Om de grootte van het bestand te beperken, kun je 'LOG_STDOUT' aanzetten, zodat stdout ook in het logbestand terechtkomt
-# LOG_STDOUT = True
+LOG_STDOUT = False
 
 
 
