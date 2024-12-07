@@ -108,3 +108,17 @@ ITEM_PIPELINES = {
 REQUEST_FINGERPRINTER_IMPLEMENTATION = "2.7"
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 FEED_EXPORT_ENCODING = "utf-8"
+
+# ScrapeOPS API Key
+SCRAPEOPS_API_KEY = 'cfc605dd-4f8b-4d05-83db-e05213e677c2'
+
+# ScrapeOPS Settings
+EXTENSIONS = {
+    'scrapeops_scrapy.extension.ScrapeOpsMonitor': 500,
+}
+
+DOWNLOADER_MIDDLEWARES = {
+    'scrapeops_scrapy.middleware.retry.RetryMiddleware': 90,
+    'scrapy.downloadermiddlewares.retry.RetryMiddleware': None,
+}
+
