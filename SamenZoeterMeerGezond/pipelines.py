@@ -127,7 +127,7 @@ class MySQLPipeline:
             'UIT': 'activiteiten_UIT',
             'GGD_APP': 'apps_ggd',
             'thuisarts': 'thuisarts',
-            'ZVE': 'workshops',
+            'ZVE': 'workshops_zve',
             'vierstroom': 'vierstroom_nieuws',
             'scheidingspunt': 'activiteiten_scheidingpunt',
             'evie': 'evie_data',
@@ -388,7 +388,7 @@ class MySQLPipeline:
         try:
             # Query om gegevens op te slaan in de 'workshops' tabel
             self.cursor.execute("""
-                INSERT INTO workshops 
+                INSERT INTO workshops_zve 
                 (titel, organisatie, beschrijving_kort, beschrijving_lang, datum, image_url, link_workshop, aantal_bijeenkomsten, eerste_bijeenkomst, laatste_bijeenkomst, inschrijven_kan_tot, datum_bijeenkomst)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE 
