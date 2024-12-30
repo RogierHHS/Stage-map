@@ -115,7 +115,7 @@ class Scheidingspunt(scrapy.Item):
 class Evie(scrapy.Item):
     Titel = scrapy.Field()
     Link = scrapy.Field()
-    Categorieën = scrapy.Field()
+    Categorieen = scrapy.Field()
     Afbeelding_url = scrapy.Field()
     Beschrijving = scrapy.Field()
     Link_naar_meer_info = scrapy.Field()

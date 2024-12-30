@@ -26,7 +26,7 @@ class EvieNlSpider(scrapy.Spider):
 
             # Extract basic fields
             evie['Titel'] = activity.css('h3::text').get()
-            evie['Categorieën'] = activity.css('div.flex.items-center.gap-2 span::text').getall()
+            evie['Categorieen'] = activity.css('div.flex.items-center.gap-2 span::text').getall()
             evie['Link'] = activity.css('a::attr(href)').get()
             evie['Afbeelding_url'] = activity.css('img::attr(src)').get()
 

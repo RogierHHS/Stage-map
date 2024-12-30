@@ -28,10 +28,20 @@ class CleanDataPipeline:
             self.clean_thuisarts_item(item)
         elif spider.name == "scheidingspunt":
             self.clean_scheidingspunt_item(item)
+        elif spider.name == "ZMA":
+            self.clean_zma_item(item)
+        elif spider.name == "evie":
+            self.clean_evie_item(item)
+        
 
         return item
 
     def clean_iz_item(self, item):
+        if 'Starttijd' in item:
+            item['Starttijd'] = item['Starttijd'].replace("0 days ", "")
+        if 'Eindtijd' in item:
+            item['Eindtijd'] = item['Eindtijd'].replace("0 days ", "")
+
         if 'Extra_beschrijving' in item:
             item['Extra_beschrijving'] = remove_tags(item['Extra_beschrijving'])
             item['Extra_beschrijving'] = re.sub(r'\s+', ' ', item['Extra_beschrijving']).strip()
@@ -76,6 +86,21 @@ class CleanDataPipeline:
     def clean_scheidingspunt_item(self, item):
         if not item['Titel'] or not item['Wat'] or not item['Voor_wie'] or not item['Wanneer']:
             raise DropItem(f"Incomplete item: {item}")
+    
+    def clean_zma_item(self, item):
+        if "Beschrijving" in item:
+            item["Beschrijving"] = item["Beschrijving"].replace("\n", " ").strip()
+            item["Beschrijving"] = re.sub(r"\s+", " ", item["Beschrijving"])
+        if "Extra_beschrijving" in item: 
+            item['Extra_beschrijving'] = remove_tags(item['Extra_beschrijving'])
+            item['Extra_beschrijving'] = item['Extra_beschrijving'].replace("\n", " ").strip()
+            item['Extra_beschrijving'] = re.sub(r"\s+", " ", item['Extra_beschrijving'])
+    
+    def clean_evie_item(self, item):
+        if "Afbeelding_url" in item:
+            item["Afbeelding_url"] = item["Afbeelding_url"].replace("data:image/svg+xml,%3Csvg%20xmlns=", "")
+            
+
 
 class MySQLPipeline:
     def __init__(self):
@@ -481,10 +506,10 @@ class MySQLPipeline:
         try:
             self.cursor.execute("""
                 INSERT INTO evie_data
-                (Titel, Categorieën, Link, Afbeelding_url, Beschrijving, Link_naar_meer_info, Tekst_knop)
+                (Titel, Categorieen, Link, Afbeelding_url, Beschrijving, Link_naar_meer_info, Tekst_knop)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ON DUPLICATE KEY UPDATE 
-                    Categorieën = VALUES(Categorieën),
+                    Categorieen = VALUES(Categorieen),
                     Link = VALUES(Link),
                     Afbeelding_url = VALUES(Afbeelding_url),
                     Beschrijving = VALUES(Beschrijving),
@@ -492,7 +517,7 @@ class MySQLPipeline:
                     Tekst_knop = VALUES(Tekst_knop)
             """, (
                 item.get('Titel'),
-                ','.join(item.get('Categorieën', [])),
+                ','.join(item.get('Categorieen', [])),
                 item.get('Link'),
                 item.get('Afbeelding_url'),
                 item.get('Beschrijving'),
